@@ -84,7 +84,7 @@ spec:
     name: jenkins-pv-claim
     namespace: jenkins-namespace
   capacity:
-    storage: 10Gi
+    storage: 5Gi
   accessModes:
     - ReadWriteOnce
   local:
