@@ -60,3 +60,5 @@ Namespace: "test-namespace"
 With this set I created the deployment and it was all set up and ready to go. As the sync policy was set to Manual I needed to sync the deployment with the GitHub repo (the source of truth) and the application was up and running and available on port 30080 of the node it is deployed on.
 
 Before continuing to the next step I wanted to see how ArgoCD handled changes in realtime, so I edited the deployment YAML in GitHub to show 3 replicas instead of 2. This was as simple as editing the application in ArgoCD and setting sync to auto.
+
+## With ArgoCD up and running and synchronising with the Repo the next step is to deploy Jenkins.
