@@ -50,7 +50,7 @@ From the UI I applied the following settings:
 Application name: "test"
 Project: "default"
 Sync Policy: "Manual"
-Source: "https://github.com/jgowler/Python-Terraform-Kubernetes-Project/tree/main"
+Source: "https://github.com/jgowler/Python-Terraform-Kubernetes-Project.git"
 Revision: "HEAD"
 Path: "Kubernetes-Files"
 Destination: "https://kubernetes.default.svc"
