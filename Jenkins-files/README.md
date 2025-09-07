@@ -243,5 +243,5 @@ The password will be present in the logs. Simply copy and paste it over to the w
 
 Now all that is left is to set up the first user. You do not need to do this as it also suggests ignoring this step and continuing as admin so this is up to you.
 
-# Now that both ArgoCD and Jenkins are running on the Kubernetes cluster the next step will be to configure Jenkins and set up the first Pipeline.
+### Now that both ArgoCD and Jenkins are running on the Kubernetes cluster the next step will be to configure Jenkins and set up the first Pipeline.
 
