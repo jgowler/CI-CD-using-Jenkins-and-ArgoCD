@@ -245,3 +245,72 @@ Now all that is left is to set up the first user. You do not need to do this as 
 
 ### Now that both ArgoCD and Jenkins are running on the Kubernetes cluster the next step will be to configure Jenkins and set up the first Pipeline.
 
+## Part 3: Set up Jenkins to create worker pods in Kubernetes
+
+### Create the Cloud in Jenkins
+
+I have chosen to use worker pods from inside of the cluster which Jenkins is hosted to create Docker images to push to Docker Hub. To create the images I will be using [Kaniko](https://github.com/GoogleContainerTools/kaniko).
+
+In the Jenkins master GUI the Kubernetes plugin is required to allow it to interact with the cluster. As Jenkins is using a Service Account that has been granted a Cluster Role which allows it to create Pods in all namespaces this will mean it has the right permissions from the start.
+
+`Jenkins > Manage Jenkins > System Configuration > Plugins > "Kubernetes plugin"`
+
+Once installed the next step is to set up Clouds
+
+`Jenkins > Manage Jenkins > Clouds > New cloud`
+
+I set it up as the following:
+```
+Name: Kubernetes
+Kubernetes URL: https://kubernetes.default.svc # Left this as is due to Jenkins running in the cluster it will create Pods in
+Kubernetes Names: jenkins-namespace
+```
+
+Then clicked "Test Connection". Connection confirmed on the return of "Connected to Kubernetes v1.33.4".
+
+### Create the Kubernetes Secret to connect to Docker Hub
+
+Kaniko will need to be able to connect to Docker Hub to push images ot the repo. To set this up I logged on to Docker Hub from a VM I have Docker hosted on and ran `docker login` to get the `config.json` file which a Secret will be created from.
+
+Once I had the config.json I moved it over to my Kubernetes Master node to create the Secret from it:
+
+```
+kubectl create secret generic kaniko-secret \
+--from-file=.dockerconfigjson=path/to/config.json \
+--type=kubernetes.io/dockerconfigjson \
+--namespace jenkins-namespace
+```
+
+With the Secret created in the Jenkins namespace the next step will be to set up the Pod templates:
+
+`Clouds > Kubernetes > New pod template`
+
+I decided on the following settings to get this set up as simplay as possible:
+
+```
+Name: Kaniko-Agent
+Namespace: jenkins-namespace
+Labels: kaniko
+Usage: Only build jobs with label expressions matching this node
+```
+
+The next section is to build the Container Templates for JNLP (Java Network Launch Protocol) and Kaniko:
+
+```
+Name: jnlp
+Docker image: jenkins/inbound-agent:latest
+Working directory: /home/jenkins/agent
+
+Name: kaniko
+Docker image: gcr.io/kaniko-project/executor:latest
+Working directory: /home/jenkins/agent
+Command to run: /busybox/sh
+Arguments to pass to the command: "-c sleep 99d"
+```
+
+To pass the Secret created in the previous step a Volume will be needed:
+
+```
+Secret name: kaniko-secret
+Mount path: /kaniko/.docker
+```
