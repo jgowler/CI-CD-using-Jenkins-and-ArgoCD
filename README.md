@@ -1,5 +1,5 @@
 # CI/CD using Jenkins and ArgoCD
-A project to deploy the simple Flask application to a Kubernetes cluster using ArgoCD and Jenkins.
+A project to deploy the simple Flask application to a Kubernetes cluster using ArgoCD and deploy Jenkins to Kubernetes and configure setting up ephemeral worker pods to run jobs.
 
 ---
 
@@ -40,6 +40,8 @@ As suggested, the admin password was changed once logged in. As ArgoCD is instal
 
 Now ArgoCD is up and running, on to deploying a test application.
 
+---
+
 ## Part 2: Deploy a test application using ArgoCD
 
 To continue on from my previous project [deploying my own Flask application in Python using Kubernetes and Terraform](https://github.com/jgowler/Python-Terraform-Kubernetes-Project) I will be using the deployment YAML created here.
@@ -60,5 +62,7 @@ Namespace: "test-namespace"
 With this set I created the deployment and it was all set up and ready to go. As the sync policy was set to Manual I needed to sync the deployment with the GitHub repo (the source of truth) and the application was up and running and available on port 30080 of the node it is deployed on.
 
 Before continuing to the next step I wanted to see how ArgoCD handled changes in realtime, so I edited the deployment YAML in GitHub to show 3 replicas instead of 2. This was as simple as editing the application in ArgoCD and setting sync to auto.
+
+---
 
 ### [With ArgoCD up and running and synchronising with the Repo the next step is to deploy Jenkins](https://github.com/jgowler/CI-CD-using-Jenkins-and-ArgoCD/tree/main/Jenkins-files)

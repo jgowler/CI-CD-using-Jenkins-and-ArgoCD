@@ -1,5 +1,5 @@
 # CI/CD using Jenkins and ArgoCD
-A project to deploy the simple Flask application to a Kubernetes cluster using ArgoCD and Jenkins.
+A project to deploy Jenkins to Kubernetes and create ephemeral Pods to be used as worker nodes.
 
 ---
 
@@ -287,23 +287,6 @@ Here I selected "Fixed" and chose port 50000
 
 ---
 
-### Create the Kubernetes Secret to connect to Docker Hub:
-
-Kaniko will need to be able to connect to Docker Hub to push images ot the repo. To set this up I logged on to Docker Hub from a VM I have Docker hosted on and ran `docker login` to get the `config.json` file which a Secret will be created from.
-
-Once I had the config.json I moved it over to my Kubernetes Master node to create the Secret from it:
-
-```
-kubectl create secret generic kaniko-secret \
---from-file=.dockerconfigjson=path/to/config.json \
---type=kubernetes.io/dockerconfigjson \
---namespace jenkins-namespace
-```
-
-With the Secret created in the Jenkins namespace the next step will be to set up the Pod templates:
-
----
-
 ### Create the Pod template:
 
 `Clouds > Kubernetes > New pod template`
@@ -339,6 +322,38 @@ Mount path: /kaniko/.docker
 ```
 
 With the agents set up to be built when a Pipeline job was run it is time to run the test:
+
+---
+
+### Create internal service for agents to connect
+
+One issue during testing was that the JNLP was unable to reach the Jenkins master inetrnally. The following service was created specifically for internal communication inthe cluster:
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-internal
+  namespace: jenkins-namespace
+spec:
+  type: ClusterIP
+  selector:
+    app: jenkins-server
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+    - name: jnlp
+      port: 50000
+      targetPort: 50000
+```
+
+I also made sure the port used by agents remained the same:
+
+`Manage Jenkins > Security > Security`
+Agents:
+- TCP port for inbound agents
+- Fixed: 50000
 
 ---
 
@@ -411,3 +426,82 @@ Finished: SUCCESS
 Success, Jenkins created a worker agent using an ephemeral container. Once the job was run the pod was removed from the cluster automatically.
 
 ---
+
+### Create a Pipeline job to lint Terraform files in Github repo
+
+To ensure my Terraform files are linted correctly I wanted to create a Pipeline job to poll the repo every 10 minutes to make sure the Terraform files were valid:
+
+`Create job > Pipline`
+
+```
+Name: Terraform Validate Check
+Description: Pipeline job to validate Terraform files in my Github repo every 10 minutes
+Triggers: Poll SCM
+- Schedule: H/10 * * * *
+Pipeline
+- Definition: Pipeline script
+Script:
+pipeline {
+  agent {
+    kubernetes {
+      label 'terraform-lint-agent'
+      yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: terraform
+    image: hashicorp/terraform:latest
+    command:
+    - cat
+    tty: true
+"""
+    }
+  }
+
+  stages {
+
+    stage('Checkout') {
+      steps {
+        git branch: 'main', url: 'https://github.com/<username>/Terraform.git' # Add Terrform repo here
+      }
+    }
+
+    stage('Lint Terraform') {
+      steps {
+        container('terraform') {
+          sh '''
+echo 'Validating Terraform code recursively...'
+
+# Loop over directories containing .tf files
+find . -type f -name '*.tf' -exec dirname {} \\; | sort -u | while read dir; do
+  echo "Linting Terraform in '$dir'..."
+  cd "$dir"
+
+  # Initialize Terraform
+  terraform init -input=false -backend=false
+
+  # Validate syntax only (variable references may be ignored)
+  terraform validate || true
+
+  cd -
+done
+'''
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "Terraform syntax check completed."
+    }
+    failure {
+      echo "Terraform linting encountered errors. Check console output."
+    }
+  }
+}
+```
+
+This will check the repo for all Terraform files, pull the repo, and using `terraform init -input=false -backend=false` means it will not initiate a backend but will download the necessary providers.
+This will also use a different image for the container `hashicorp/terraform:latest` instead of Kaniko as was used previously.
