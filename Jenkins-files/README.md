@@ -93,14 +93,14 @@ spec:
     - ReadWriteOnce
   local:
     path: /mnt
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - workerserver
+  nodeAffinity:                         # This will be dependant on how you wish to make data persistent.
+    required:                           #
+      nodeSelectorTerms:                #
+      - matchExpressions:               # match..
+        - key: kubernetes.io/hostname   # the hostname..
+          operator: In                  #
+          values:                       #
+          - workerserver                # The name of the node
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
