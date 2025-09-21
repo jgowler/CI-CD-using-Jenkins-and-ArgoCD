@@ -505,3 +505,9 @@ done
 
 This will check the repo for all Terraform files, pull the repo, and using `terraform init -input=false -backend=false` means it will not initiate a backend but will download the necessary providers.
 This will also use a different image for the container `hashicorp/terraform:latest` instead of Kaniko as was used previously.
+
+---
+
+## Summary
+
+With this mini project complete my next task will be to set up a Certificate Manager for Kubernetes using ArgoCD.

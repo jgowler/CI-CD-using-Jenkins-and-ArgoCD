@@ -65,4 +65,4 @@ Before continuing to the next step I wanted to see how ArgoCD handled changes in
 
 ---
 
-### [With ArgoCD up and running and synchronising with the Repo the next step is to deploy Jenkins](https://github.com/jgowler/CI-CD-using-Jenkins-and-ArgoCD/tree/main/Jenkins-files)
+### [With ArgoCD up and running and synchronising with the Repo the next step is to deploy Jenkins to Kubernetes](https://github.com/jgowler/CI-CD-using-Jenkins-and-ArgoCD/tree/main/Jenkins-files)
