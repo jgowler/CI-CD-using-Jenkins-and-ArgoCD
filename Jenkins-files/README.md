@@ -510,4 +510,4 @@ This will also use a different image for the container `hashicorp/terraform:late
 
 ## Summary
 
-With this mini project complete my next task will be to set up a Certificate Manager for Kubernetes using ArgoCD.
+With this mini project complete my next task will be to set up a Certificate Manager for Kubernetes using ArgoCD. As the Jenkins files are stored in the Github repo should I want to Jenkins could be deployed using ArgoCD, for now it is deployed manually.
