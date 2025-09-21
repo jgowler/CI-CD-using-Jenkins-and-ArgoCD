@@ -24,6 +24,8 @@ In the cluster run the following `kubectl` command to create the namespace for J
 kubectl create namespace jenkins-namespace
 ```
 
+---
+
 ### Create the Jenkins Service Account
 
 The service account will require a CLusterRole to be applied to it to allow it to manage the cluster components:
@@ -59,6 +61,8 @@ subjects:
 ```
 
 save this to `jenkins-service-account.yaml` then run `kubectl apply -f jenkins-service-account.yaml` to create the SA, clusterrole and the binding.
+
+---
 
 ### Create Local Persistent Volume
 
@@ -113,6 +117,8 @@ spec:
 ```
 
 Save as `jenkins-pv-pvc.yaml`, then run `kubectl apply -f jenkins-pv-pcv.yaml` to create.
+
+---
 
 ### Create the Deployment
 
@@ -207,6 +213,8 @@ chown -R $runAsUser:$fsGroup /var/jenkins_home
 chmod -R g+rwX /var/jenkins_home
 ```
 
+---
+
 ### Create the Service for jenkins
 
 To make the deployment accessible a Service will need to be created:
@@ -245,7 +253,11 @@ Now all that is left is to set up the first user. You do not need to do this as 
 
 ### Now that both ArgoCD and Jenkins are running on the Kubernetes cluster the next step will be to configure Jenkins and set up the first Pipeline.
 
+---
+
 ## Part 3: Set up Jenkins to create worker pods in Kubernetes
+
+---
 
 ### Create the Cloud in Jenkins
 
@@ -273,6 +285,8 @@ After this I went on to make sure that the inbound port for agents to connect to
 `Manage Jenkins > Security > Agents > "TCP port for inbound agents"`
 Here I selected "Fixed" and chose port 50000
 
+---
+
 ### Create the Kubernetes Secret to connect to Docker Hub:
 
 Kaniko will need to be able to connect to Docker Hub to push images ot the repo. To set this up I logged on to Docker Hub from a VM I have Docker hosted on and ran `docker login` to get the `config.json` file which a Secret will be created from.
@@ -287,6 +301,8 @@ kubectl create secret generic kaniko-secret \
 ```
 
 With the Secret created in the Jenkins namespace the next step will be to set up the Pod templates:
+
+---
 
 ### Create the Pod template:
 
@@ -323,6 +339,8 @@ Mount path: /kaniko/.docker
 ```
 
 With the agents set up to be built when a Pipeline job was run it is time to run the test:
+
+---
 
 ### Run the first test Pipeline:
 
