@@ -268,7 +268,12 @@ Kubernetes Names: jenkins-namespace
 
 Then clicked "Test Connection". Connection confirmed on the return of "Connected to Kubernetes v1.33.4".
 
-### Create the Kubernetes Secret to connect to Docker Hub
+After this I went on to make sure that the inbound port for agents to connect to the master was specified:
+
+`Manage Jenkins > Security > Agents > "TCP port for inbound agents"`
+Here I selected "Fixed" and chose port 50000
+
+### Create the Kubernetes Secret to connect to Docker Hub:
 
 Kaniko will need to be able to connect to Docker Hub to push images ot the repo. To set this up I logged on to Docker Hub from a VM I have Docker hosted on and ran `docker login` to get the `config.json` file which a Secret will be created from.
 
@@ -282,6 +287,8 @@ kubectl create secret generic kaniko-secret \
 ```
 
 With the Secret created in the Jenkins namespace the next step will be to set up the Pod templates:
+
+### Create the Pod template:
 
 `Clouds > Kubernetes > New pod template`
 
@@ -304,8 +311,8 @@ Working directory: /home/jenkins/agent
 Name: kaniko
 Docker image: gcr.io/kaniko-project/executor:latest
 Working directory: /home/jenkins/agent
-Command to run: /busybox/sh
-Arguments to pass to the command: "-c sleep 99d"
+Command to run: N/A
+Arguments to pass to the command: N/A
 ```
 
 To pass the Secret created in the previous step a Volume will be needed:
@@ -314,3 +321,73 @@ To pass the Secret created in the previous step a Volume will be needed:
 Secret name: kaniko-secret
 Mount path: /kaniko/.docker
 ```
+
+With the agents set up to be built when a Pipeline job was run it is time to run the test:
+
+### Run the first test Pipeline:
+
+`Create a Job > Name: "Test1" > Pipeline`
+
+I left all fields blank for now and went straight into the Pipeline section:
+
+```
+Definition: "Pipeline script"
+Script:
+
+pipeline {
+  agent {
+    kubernetes {
+      yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: worker
+    image: alpine:3.19
+    command:
+      - cat
+    tty: true
+"""
+    }
+  }
+
+  stages {
+    stage('Say Hello') {
+      steps {
+        container('worker') {
+          sh 'echo "Hello World"'
+        }
+      }
+    }
+  }
+}
+```
+
+Apply and Save
+
+To see the pods being created in realtime i ran `kubectl get pods -n jenkins-workspace -w` to monitor their creation as the Pipeline was run.
+Here is the output:
+
+```
+Running on test1-1-13rnp-zkrtr-jddf8 in /home/jenkins/agent/workspace/Test1
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Say Hello)
+[Pipeline] container
+[Pipeline] {
+[Pipeline] sh
++ echo 'Hello World'
+Hello World
+[Pipeline] }
+[Pipeline] // container
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] }
+[Pipeline] // podTemplate
+[Pipeline] End of Pipeline
+Finished: SUCCESS
+```
+
+Success, Jenkins created a worker agent using an ephemeral container. Once the job was run the pod was removed from the cluster automatically.
