@@ -8,7 +8,7 @@ Script:
 pipeline {
   agent {
     kubernetes {
-      label 'terraform-lint-agent'
+      label 'terraform-validate-agent'
       yaml """
 apiVersion: v1
 kind: Pod
@@ -31,7 +31,7 @@ spec:
       }
     }
 
-    stage('Lint Terraform') {
+    stage('Validate Terraform') {
       steps {
         container('terraform') {
           sh '''
@@ -39,7 +39,7 @@ echo 'Validating Terraform code recursively...'
 
 # Loop over directories containing .tf files
 find . -type f -name '*.tf' -exec dirname {} \\; | sort -u | while read dir; do
-  echo "Linting Terraform in '$dir'..."
+  echo "Validating Terraform in '$dir'..."
   cd "$dir"
 
   # Initialize Terraform
@@ -61,7 +61,7 @@ done
       echo "Terraform syntax check completed."
     }
     failure {
-      echo "Terraform linting encountered errors. Check console output."
+      echo "Terraform validation encountered errors. Check console output."
     }
   }
 }
