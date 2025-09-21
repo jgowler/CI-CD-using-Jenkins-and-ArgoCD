@@ -411,19 +411,3 @@ Finished: SUCCESS
 Success, Jenkins created a worker agent using an ephemeral container. Once the job was run the pod was removed from the cluster automatically.
 
 ---
-
-### Create credentials in Jenkins to connect to Docker HUb:
-
-`Manage Jenkins > Credentials > System > Global credentials (unrestricted) > Add credentials`
-
-```
-Kind: Username with password
-Scope: Global (Jenkins nodes, items, all child items, etc)
-Username: Dockerhub username
-Treat usernmae as secret: enabled
-Password: Dockerhub password
-ID: Dockerhub-creds
-Description: <blank>
-Create
-```
-
